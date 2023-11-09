@@ -107,11 +107,8 @@ uniform float noise_scale;
 void main() {
   float ar = resolution.x / resolution.y;
   vec2 pos = gl_FragCoord.xy / resolution;
-pos.y = 1.0 - pos.y;
-  pos.y /= ar;
 
   vec2 mouse = uMouse / resolution;
-  mouse.y = (1. - mouse.y) / ar;
 
   // Calculate noise as before
   float noise = snoise(vec3(pos * noise_scale, time * noise_speed)); 

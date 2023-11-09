@@ -52,10 +52,11 @@ const button = document.querySelector(".button");
 const buttonRect = button.getBoundingClientRect();
 const buttonSizeNDC = {
   x: buttonRect.left / window.innerWidth,
-  y: (window.innerHeight - buttonRect.bottom) / window.innerHeight, // Correctly flip the Y
+  y: 1.0 - buttonRect.bottom / window.innerHeight, // Flip Y
   z: buttonRect.right / window.innerWidth,
-  w: (window.innerHeight - buttonRect.top) / window.innerHeight, // Correctly flip the Y
+  w: 1.0 - buttonRect.top / window.innerHeight, // Flip Y
 };
+mouse.y = window.innerHeight - mouse.y;
 
 const uniforms = {
   resolution: [0, 0],
@@ -100,15 +101,15 @@ function onResize() {
   const positionBuffer = new Float32Array([
     0,
     0,
-    window.innerWidth,
+    app.view.width,
     0,
-    window.innerWidth,
-    window.innerHeight,
+    app.view.width,
+    app.view.height,
     0,
-    window.innerHeight,
+    app.view.height,
   ]);
   geometry.buffers[0].update(positionBuffer);
-  mesh.shader.uniforms.resolution = [window.innerWidth, window.innerHeight];
+  mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
 }
 
 onResize();
