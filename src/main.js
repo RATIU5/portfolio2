@@ -11,7 +11,7 @@ const app = new PIXI.Application({
   width: window.innerWidth,
   height: window.innerHeight,
   autoDensity: true,
-  transparent: true,
+  backgroundAlpha: 0,
   antialias: true,
   resolution: window.devicePixelRatio || 1,
 });
@@ -24,8 +24,9 @@ app.renderer.view.style.display = "block";
 window.addEventListener("resize", onResize);
 
 app.renderer.view.addEventListener("mousemove", (e) => {
-  mouse.x = e.x;
-  mouse.y = e.y;
+  const rect = app.view.getBoundingClientRect();
+  mouse.x = (e.clientX - rect.left) * (app.view.width / rect.width);
+  mouse.y = (e.clientY - rect.top) * (app.view.height / rect.height);
 });
 
 let positionalBuffer = new Float32Array([
