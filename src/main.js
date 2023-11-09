@@ -57,15 +57,11 @@ const buttonSizeNDC = {
 const uniforms = {
   resolution: [0, 0],
   uMouse: [0, 0],
-  buttonSize: [
-    buttonSizeNDC.x,
-    buttonSizeNDC.y,
-    buttonSizeNDC.z,
-    buttonSizeNDC.w,
-  ],
+  button: [buttonSizeNDC.x, buttonSizeNDC.y, buttonSizeNDC.z, buttonSizeNDC.w],
+  buttonFadeRange: 0.1,
   time: 0,
   noise_speed: 0.2,
-  metaball: 1,
+  metaball: 0.5,
   discard_threshold: 0.5,
   antialias_threshold: 0.002,
   noise_height: 0.5,
