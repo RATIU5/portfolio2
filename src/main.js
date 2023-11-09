@@ -21,9 +21,10 @@ document.body.appendChild(app.view);
 // Auto-resize
 app.renderer.view.style.position = "absolute";
 app.renderer.view.style.display = "block";
+app.renderer.view.style.zIndex = "-1";
 window.addEventListener("resize", onResize);
 
-app.renderer.view.addEventListener("mousemove", (e) => {
+window.addEventListener("mousemove", (e) => {
   const rect = app.view.getBoundingClientRect();
   mouse.x = (e.clientX - rect.left) * (app.view.width / rect.width);
   mouse.y = (e.clientY - rect.top) * (app.view.height / rect.height);
@@ -44,16 +45,31 @@ const geometry = new PIXI.Geometry()
   .addAttribute("position", positionalBuffer, 2)
   .addIndex([0, 1, 2, 0, 2, 3]);
 
+const button = document.querySelector(".button");
+const buttonRect = button.getBoundingClientRect();
+const buttonSizeNDC = {
+  x: buttonRect.x / window.innerWidth,
+  y: 1.0 - (buttonRect.y + buttonRect.height) / window.innerHeight, // Flip Y
+  z: (buttonRect.x + buttonRect.width) / window.innerWidth,
+  w: 1.0 - buttonRect.y / window.innerHeight, // Flip Y and use top-left as origin
+};
+
 const uniforms = {
   resolution: [0, 0],
   uMouse: [0, 0],
+  buttonSize: [
+    buttonSizeNDC.x,
+    buttonSizeNDC.y,
+    buttonSizeNDC.z,
+    buttonSizeNDC.w,
+  ],
   time: 0,
   noise_speed: 0.2,
   metaball: 1,
   discard_threshold: 0.5,
   antialias_threshold: 0.002,
   noise_height: 0.5,
-  noise_scale: 10,
+  noise_scale: 50,
 };
 
 const shader = PIXI.Shader.from(vertexShader, fragmentShader, uniforms);

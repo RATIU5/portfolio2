@@ -96,6 +96,7 @@ uniform vec2 resolution;
 uniform vec2 uMouse;
 uniform float noise_speed;
 uniform float metaball;
+uniform vec4 buttonSize;
 uniform float discard_threshold;
 uniform float antialias_threshold;
 uniform float noise_height;
@@ -114,6 +115,7 @@ void main() {
     noise = (noise + 1.) / 2.; // (-1, 1) to (0, 1)
     float val = noise * noise_height; // (0, noise_height)
   
+
     float d = distance(mouse, pos); // (0=near, 1=far)
     float u = d / (metaball + 0.00001);  // avoid division by 0
   
