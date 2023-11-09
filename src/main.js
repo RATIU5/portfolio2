@@ -84,40 +84,44 @@ const mesh = new PIXI.Mesh(geometry, shader);
 mesh.blendMode = PIXI.BLEND_MODES.NORMAL;
 app.stage.addChild(mesh);
 
-function updateButtonSize() {
-  const buttonRect = button.getBoundingClientRect();
-  const canvasRect = app.view.getBoundingClientRect();
-
-  // Normalize button size with respect to the canvas size, flip Y for GLSL
-  const buttonSizeNDC = {
-    x: (buttonRect.left - canvasRect.left) / canvasRect.width,
-    y: 1.0 - (buttonRect.bottom - canvasRect.top) / canvasRect.height,
-    z: (buttonRect.right - canvasRect.left) / canvasRect.width,
-    w: 1.0 - (buttonRect.top - canvasRect.top) / canvasRect.height,
-  };
-
-  mesh.shader.uniforms.buttonSize = [
-    buttonSizeNDC.x * 2 - 1, // Convert to NDC
-    buttonSizeNDC.y * 2 - 1, // Convert to NDC
-    buttonSizeNDC.z * 2 - 1, // Convert to NDC
-    buttonSizeNDC.w * 2 - 1, // Convert to NDC
-  ];
-}
-
 app.ticker.add((delta) => {
   const elapsed = app.ticker.elapsedMS / 1000.0;
   mesh.shader.uniforms.time += elapsed;
   mesh.shader.uniforms.uMouse = [mouse.x, mouse.y];
-  // const maxDimension = Math.max(app.renderer.width, app.renderer.height);
+  const maxDimension = Math.max(app.renderer.width, app.renderer.height);
   mesh.shader.uniforms.resolution = baseResolution;
   // mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
-  updateButtonSize();
+  mesh.shader.uniforms.buttonSize = [
+    buttonSizeNDC.x,
+    buttonSizeNDC.y,
+    buttonSizeNDC.z,
+    buttonSizeNDC.w,
+  ];
 });
+
+function resizeButtonUniform() {
+  // Calculate the new size and position of the button in logical coordinates
+  const logicalWidth = window.innerWidth / window.innerHeight;
+  const buttonSizeLogical = {
+    x: (buttonRect.left / window.innerHeight) * logicalWidth,
+    y: buttonRect.top / window.innerHeight,
+    z: (buttonRect.right / window.innerHeight) * logicalWidth,
+    w: buttonRect.bottom / window.innerHeight,
+  };
+
+  // Update buttonSize uniform to match logical coordinates
+  mesh.shader.uniforms.buttonSize = [
+    buttonSizeLogical.x - logicalWidth / 2,
+    0.5 - buttonSizeLogical.y,
+    buttonSizeLogical.z - logicalWidth / 2,
+    0.5 - buttonSizeLogical.w,
+  ];
+}
 
 function onResize() {
   app.renderer.resize(window.innerWidth, window.innerHeight);
-  // Calculate the new size and position of the button in logical coordinates
-  updateButtonSize();
+
+  resizeButtonUniform();
 
   const maxDimension = Math.max(app.renderer.width, app.renderer.height);
   const positionBuffer = new Float32Array([

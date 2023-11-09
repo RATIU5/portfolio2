@@ -105,21 +105,14 @@ uniform float noise_scale;
 
 
 void main() {
-  vec2 baseResolution = vec2(800.0, 800.0);
-  vec2 scaleFactor = baseResolution / resolution;
-  vec2 pos = (gl_FragCoord.xy / resolution) * scaleFactor;
-  vec2 mouse = uMouse / baseResolution; // Use baseResolution to keep mouse in correct space
+  // Transform fragment coordinates to NDC
+  vec2 ndc = (gl_FragCoord.xy / resolution.xy) * 2.0 - 1.0;
+  ndc.y = -ndc.y; // WebGL's y-coordinate is inverted compared to CSS
 
-  // The button's NDC (Normalized Device Coordinates) should be converted to the same space as the mouse
-  vec4 button = vec4(buttonSize.x, buttonSize.y, buttonSize.z, buttonSize.w);
+  // Determine if the pixel is inside the button
+  float insideButton = step(buttonSize.x, ndc.x) * step(ndc.x, buttonSize.z) * step(buttonSize.y, ndc.y) * step(ndc.y, buttonSize.w);
 
-  // Determine if the current pixel is within the button bounds
-  float inButtonX = step(button.x, pos.x) * step(pos.x, button.z);
-  float inButtonY = step(button.y, pos.y) * step(pos.y, button.w);
-  float inButton = inButtonX * inButtonY;
-
-  // Debug color for the button area
-  vec3 debugColor = vec3(inButton); // White inside the button, black outside
-
-  gl_FragColor = vec4(debugColor, 1.0); // Full alpha for visibility
+  // Set color based on whether we're inside the button or not
+  vec3 color = mix(vec3(0.0), vec3(1.0), insideButton);
+  gl_FragColor = vec4(color, 1.0);
 }
