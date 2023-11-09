@@ -129,13 +129,13 @@ void main() {
   // Calculate a gradient based on the distance, where 0.0 is far and 1.0 is on the button
   float gradient = 1.0 - smoothstep(0.0, buttonFadeRange, dist);
 
-  float val = noise * noise_height;
+  float val = noise * noise_height * gradient;
 
   float d = distance(mouse, pos); 
   float u = d / (metaball + 0.00001);
   float mouseMetaball = u * max(5., 10. - 25. * u);
   mouseMetaball = clamp(1. - mouseMetaball, 0., 1.);
-  val += mouseMetaball; // Apply the gradient here as well
+  val += mouseMetaball * gradient; // Apply the gradient here as well
 
   float low = discard_threshold - antialias_threshold;
   float high = discard_threshold;
