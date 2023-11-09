@@ -96,7 +96,7 @@ uniform vec2 resolution;
 uniform vec2 uMouse;
 uniform float noise_speed;
 uniform float metaball;
-uniform vec4 button;
+uniform vec4 buttonSize;
 uniform float buttonFadeRange;
 uniform float discard_threshold;
 uniform float antialias_threshold;
@@ -105,39 +105,46 @@ uniform float noise_scale;
 
 
 void main() {
-    float ar = resolution.x / resolution.y;
-    vec2 pos = gl_FragCoord.xy / resolution;
-    pos.y /= ar;
-  
-    vec2 mouse = uMouse / resolution;
-    mouse.y = (1. - mouse.y) / ar;
+  float ar = resolution.x / resolution.y;
+  vec2 pos = gl_FragCoord.xy / resolution;
+pos.y = 1.0 - pos.y;
+  pos.y /= ar;
 
-    // Calculate noise as before
-    float noise = snoise(vec3(pos * noise_scale, time * noise_speed)); 
-    noise = (noise + 1.) / 2.; 
+  vec2 mouse = uMouse / resolution;
+  mouse.y = (1. - mouse.y) / ar;
 
-    // Determine if we're within the button bounds and how close we are
-    float distX = distance(mouse.x, clamp(mouse.x, button.x, button.z));
-    float distY = distance(mouse.y, clamp(mouse.y, button.y, button.w));
-    float dist = max(distX, distY); // Use the largest distance to maintain a circular range
+  // Calculate noise as before
+  float noise = snoise(vec3(pos * noise_scale, time * noise_speed)); 
+  noise = (noise + 1.) / 2.; 
 
-    // Calculate a gradient based on the distance, where 0.0 is far and 1.0 is on the button
-    float gradient = 1.0 - smoothstep(0.0, buttonFadeRange, dist);
 
-    // Apply the gradient to the noise value
-    float val = noise * noise_height * gradient;
 
-    // Calculate metaball effect as before
-    float d = distance(mouse, pos); 
-    float u = d / (metaball + 0.00001);
-    float mouseMetaball = u * max(5., 10. - 25. * u);
-    mouseMetaball = clamp(1. - mouseMetaball, 0., 1.);
-    val += mouseMetaball * gradient; // Apply the gradient here as well
+  // Determine if we're within the button bounds and how close we are
+  vec4 button = vec4(buttonSize.x, buttonSize.y, buttonSize.z, buttonSize.w);
+  // The button's Y coordinate should be based on GLSL space, i.e., bottom is 0 and top is 1.
+  float inButtonY = step(button.y, mouse.y) * step(mouse.y, button.w);
+  float distX = distance(mouse.x, clamp(mouse.x, button.x, button.z));
+  float distY = distance(mouse.y, clamp(mouse.y, button.y, button.w));
+  float dist = max(distX, distY); // Use the largest distance to maintain a circular range
 
-    // Antialiasing and color as before
-    float low = discard_threshold - antialias_threshold;
-    float high = discard_threshold;
-    float alpha = smoothstep(low, high, val);
-    vec3 color = vec3(63., 30., 223.) / 255.;
-    gl_FragColor = vec4(color, alpha);}
+  // Calculate a gradient based on the distance, where 0.0 is far and 1.0 is on the button
+  float gradient = 1.0 - smoothstep(0.0, buttonFadeRange, dist);
+
+  // Apply the gradient to the noise value
+  float val = noise * noise_height * gradient;
+
+  // Calculate metaball effect as before
+  float d = distance(mouse, pos); 
+  float u = d / (metaball + 0.00001);
+  float mouseMetaball = u * max(5., 10. - 25. * u);
+  mouseMetaball = clamp(1. - mouseMetaball, 0., 1.);
+  val += mouseMetaball * gradient; // Apply the gradient here as well
+
+  // Antialiasing and color as before
+  float low = discard_threshold - antialias_threshold;
+  float high = discard_threshold;
+  float alpha = smoothstep(low, high, val);
+  vec3 color = vec3(63., 30., 223.) / 255.;
+  gl_FragColor = vec4(color, alpha);
+}
 

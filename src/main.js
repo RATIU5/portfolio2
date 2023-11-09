@@ -27,7 +27,10 @@ window.addEventListener("resize", onResize);
 window.addEventListener("mousemove", (e) => {
   const rect = app.view.getBoundingClientRect();
   mouse.x = (e.clientX - rect.left) * (app.view.width / rect.width);
-  mouse.y = (e.clientY - rect.top) * (app.view.height / rect.height);
+  // Flip Y for GLSL coordinates
+  mouse.y =
+    (window.innerHeight - (e.clientY - rect.top)) *
+    (app.view.height / rect.height);
 });
 
 let positionalBuffer = new Float32Array([
@@ -48,16 +51,21 @@ const geometry = new PIXI.Geometry()
 const button = document.querySelector(".button");
 const buttonRect = button.getBoundingClientRect();
 const buttonSizeNDC = {
-  x: buttonRect.x / window.innerWidth,
-  y: 1.0 - (buttonRect.y + buttonRect.height) / window.innerHeight, // Flip Y
-  z: (buttonRect.x + buttonRect.width) / window.innerWidth,
-  w: 1.0 - buttonRect.y / window.innerHeight, // Flip Y and use top-left as origin
+  x: buttonRect.left / window.innerWidth,
+  y: (window.innerHeight - buttonRect.bottom) / window.innerHeight, // Correctly flip the Y
+  z: buttonRect.right / window.innerWidth,
+  w: (window.innerHeight - buttonRect.top) / window.innerHeight, // Correctly flip the Y
 };
 
 const uniforms = {
   resolution: [0, 0],
   uMouse: [0, 0],
-  button: [buttonSizeNDC.x, buttonSizeNDC.y, buttonSizeNDC.z, buttonSizeNDC.w],
+  buttonSize: [
+    buttonSizeNDC.x,
+    buttonSizeNDC.y,
+    buttonSizeNDC.z,
+    buttonSizeNDC.w,
+  ],
   buttonFadeRange: 0.1,
   time: 0,
   noise_speed: 0.2,
@@ -79,6 +87,12 @@ app.ticker.add((delta) => {
   mesh.shader.uniforms.time += elapsed;
   mesh.shader.uniforms.uMouse = [mouse.x, mouse.y];
   mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
+  mesh.shader.uniforms.buttonSize = [
+    buttonSizeNDC.x,
+    buttonSizeNDC.y,
+    buttonSizeNDC.z,
+    buttonSizeNDC.w,
+  ];
 });
 
 function onResize() {
