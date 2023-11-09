@@ -87,7 +87,9 @@ app.ticker.add((delta) => {
   const elapsed = app.ticker.elapsedMS / 1000.0;
   mesh.shader.uniforms.time += elapsed;
   mesh.shader.uniforms.uMouse = [mouse.x, mouse.y];
-  mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
+  const maxDimension = Math.max(app.renderer.width, app.renderer.height);
+  mesh.shader.uniforms.resolution = [maxDimension, maxDimension];
+  // mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
   mesh.shader.uniforms.buttonSize = [
     buttonSizeNDC.x,
     buttonSizeNDC.y,
@@ -98,15 +100,32 @@ app.ticker.add((delta) => {
 
 function onResize() {
   app.renderer.resize(window.innerWidth, window.innerHeight);
+  // Calculate the new size and position of the button in logical coordinates
+  const logicalWidth = window.innerWidth / window.innerHeight;
+  const buttonSizeLogical = {
+    x: (buttonRect.left / window.innerHeight) * logicalWidth,
+    y: buttonRect.top / window.innerHeight,
+    z: (buttonRect.right / window.innerHeight) * logicalWidth,
+    w: buttonRect.bottom / window.innerHeight,
+  };
+
+  // Update buttonSize uniform to match logical coordinates
+  mesh.shader.uniforms.buttonSize = [
+    buttonSizeLogical.x - logicalWidth / 2,
+    0.5 - buttonSizeLogical.y,
+    buttonSizeLogical.z - logicalWidth / 2,
+    0.5 - buttonSizeLogical.w,
+  ];
+  const maxDimension = Math.max(app.renderer.width, app.renderer.height);
   const positionBuffer = new Float32Array([
     0,
     0,
-    app.view.width,
+    maxDimension,
     0,
-    app.view.width,
-    app.view.height,
+    maxDimension,
+    maxDimension,
     0,
-    app.view.height,
+    maxDimension,
   ]);
   geometry.buffers[0].update(positionBuffer);
   mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
