@@ -107,40 +107,19 @@ uniform float noise_scale;
 void main() {
   vec2 baseResolution = vec2(800.0, 800.0);
   vec2 scaleFactor = baseResolution / resolution;
-  float ar = resolution.x / resolution.y;
-  vec2 posOld = gl_FragCoord.xy / resolution;
-  vec2 posOld2 = vec2(posOld.x * ar, posOld.y);
-  vec2 pos = posOld2 * scaleFactor;
+  vec2 pos = (gl_FragCoord.xy / resolution) * scaleFactor;
+  vec2 mouse = uMouse / baseResolution; // Use baseResolution to keep mouse in correct space
 
-  vec2 mouse = uMouse / resolution;
-
-  // Calculate noise as before
-  float noise = snoise(vec3(pos * noise_scale, time * noise_speed)); 
-  noise = (noise + 1.) / 2.; 
-
-  // Determine if we're within the button bounds and how close we are
+  // The button's NDC (Normalized Device Coordinates) should be converted to the same space as the mouse
   vec4 button = vec4(buttonSize.x, buttonSize.y, buttonSize.z, buttonSize.w);
-  // The button's Y coordinate should be based on GLSL space, i.e., bottom is 0 and top is 1.
-  float inButtonY = step(button.y, mouse.y) * step(mouse.y, button.w);
-  float distX = distance(mouse.x, clamp(mouse.x, button.x, button.z));
-  float distY = distance(mouse.y, clamp(mouse.y, button.y, button.w));
-  float dist = max(distX, distY); // Use the largest distance to maintain a circular range
 
-  // Calculate a gradient based on the distance, where 0.0 is far and 1.0 is on the button
-  float gradient = 1.0 - smoothstep(0.0, buttonFadeRange, dist);
+  // Determine if the current pixel is within the button bounds
+  float inButtonX = step(button.x, pos.x) * step(pos.x, button.z);
+  float inButtonY = step(button.y, pos.y) * step(pos.y, button.w);
+  float inButton = inButtonX * inButtonY;
 
-  float val = noise * noise_height * gradient;
+  // Debug color for the button area
+  vec3 debugColor = vec3(inButton); // White inside the button, black outside
 
-  float d = distance(mouse, pos); 
-  float u = d / (metaball + 0.00001);
-  float mouseMetaball = u * max(5., 10. - 25. * u);
-  mouseMetaball = clamp(1. - mouseMetaball, 0., 1.);
-  val += mouseMetaball * gradient; // Apply the gradient here as well
-
-  float low = discard_threshold - antialias_threshold;
-  float high = discard_threshold;
-  float alpha = smoothstep(low, high, val);
-  vec3 color = vec3(63., 30., 223.) / 255.;
-  gl_FragColor = vec4(color, alpha);
+  gl_FragColor = vec4(debugColor, 1.0); // Full alpha for visibility
 }
-
