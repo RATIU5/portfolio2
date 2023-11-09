@@ -107,20 +107,30 @@ void main() {
     float ar = resolution.x / resolution.y;
     vec2 pos = gl_FragCoord.xy / resolution;
     pos.y /= ar;
-  
+
+    // Adjust buttonSize for aspect ratio
+    vec4 button = buttonSize;
+    button.y /= ar;
+    button.w /= ar;
+
     vec2 mouse = uMouse / resolution;
     mouse.y = (1. - mouse.y) / ar;
+
+    // Determine if we're within the button bounds
+    float inButtonX = step(button.x, mouse.x) * step(mouse.x, button.z);
+    float inButtonY = step(button.y, mouse.y) * step(mouse.y, button.w);
+    float inButton = inButtonX * inButtonY;
   
     float noise = snoise(vec3(pos * noise_scale, time * noise_speed)); // (-1, 1)
     noise = (noise + 1.) / 2.; // (-1, 1) to (0, 1)
-    float val = noise * noise_height; // (0, noise_height)
+    float val = noise * noise_height * inButton; // (0, noise_height)
   
 
     float d = distance(mouse, pos); // (0=near, 1=far)
     float u = d / (metaball + 0.00001);  // avoid division by 0
   
     float mouseMetaball = u * max(5., 10. - 25. * u);
-    mouseMetaball = clamp(1. - mouseMetaball, 0., 1.);
+    mouseMetaball = clamp(1. - mouseMetaball, 0., 1.) * inButton;
     val += mouseMetaball;
   
     // antialiasing
