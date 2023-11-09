@@ -105,9 +105,12 @@ uniform float noise_scale;
 
 
 void main() {
+  vec2 baseResolution = vec2(800.0, 800.0);
+  vec2 scaleFactor = baseResolution / resolution;
   float ar = resolution.x / resolution.y;
   vec2 posOld = gl_FragCoord.xy / resolution;
-  vec2 pos = vec2(posOld.x * ar, posOld.y);
+  vec2 posOld2 = vec2(posOld.x * ar, posOld.y);
+  vec2 pos = posOld2 * scaleFactor;
 
   vec2 mouse = uMouse / resolution;
 

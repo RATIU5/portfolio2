@@ -6,6 +6,7 @@ const mouse = {
   x: 0,
   y: 0,
 };
+const baseResolution = [800, 800];
 
 const app = new PIXI.Application({
   width: window.innerWidth,
@@ -70,11 +71,11 @@ const uniforms = {
   buttonFadeRange: 0.1,
   time: 0,
   noise_speed: 0.2,
-  metaball: 0.5,
+  metaball: 1.5,
   discard_threshold: 0.5,
   antialias_threshold: 0.002,
   noise_height: 0.5,
-  noise_scale: 50,
+  noise_scale: 10,
 };
 
 const shader = PIXI.Shader.from(vertexShader, fragmentShader, uniforms);
@@ -88,7 +89,7 @@ app.ticker.add((delta) => {
   mesh.shader.uniforms.time += elapsed;
   mesh.shader.uniforms.uMouse = [mouse.x, mouse.y];
   const maxDimension = Math.max(app.renderer.width, app.renderer.height);
-  mesh.shader.uniforms.resolution = [maxDimension, maxDimension];
+  mesh.shader.uniforms.resolution = baseResolution;
   // mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
   mesh.shader.uniforms.buttonSize = [
     buttonSizeNDC.x,
@@ -128,7 +129,7 @@ function onResize() {
     maxDimension,
   ]);
   geometry.buffers[0].update(positionBuffer);
-  mesh.shader.uniforms.resolution = [app.renderer.width, app.renderer.height];
+  mesh.shader.uniforms.resolution = [maxDimension, maxDimension];
 }
 
 onResize();
