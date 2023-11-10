@@ -32,6 +32,8 @@ function setupDOM(state: AppState) {
 
 function resize(state: AppState) {
   state.app.renderer.resize(window.innerWidth, window.innerHeight);
+  state.app.view.style.width = `${window.innerWidth}px`;
+  state.app.view.style.height = `${window.innerHeight}px`;
   updateUniform(state, "u_resolution", getAppWidthAndHeight(state));
   updateUniform(state, "u_rect_size", calculateButtonSize(state));
   updateBuffer(
@@ -72,6 +74,10 @@ function updateBuffer(state: AppState, name: string, value: Float32Array) {
   state.mesh.geometry.getBuffer(name).data = value;
 }
 
+function pixelRatio(): number {
+  return window.devicePixelRatio || 1;
+}
+
 function calculateButtonSize(
   state: AppState,
 ): [number, number, number, number] {
@@ -81,17 +87,16 @@ function calculateButtonSize(
     return [0, 0, 0, 0];
   }
   const rect = buttonElement.getBoundingClientRect();
-  const canvasWidth = state.app.view.width;
-  const canvasHeight = state.app.view.height;
+  const pr = pixelRatio();
+  const canvasWidth = state.app.renderer.width / pr;
+  const canvasHeight = state.app.renderer.height / pr;
 
-  const left = (rect.left / canvasWidth) * 2 - 1;
-  const right = (rect.right / canvasWidth) * 2 - 1;
-  const top = -((rect.top / canvasHeight) * 2 - 1);
-  const bottom = -((rect.bottom / canvasHeight) * 2 - 1);
+  const left = 2 * (rect.left / canvasWidth) - 1;
+  const right = 2 * ((rect.left + rect.width) / canvasWidth) - 1;
+  const top = 1 - 2 * (rect.top / canvasHeight);
+  const bottom = 1 - 2 * ((rect.top + rect.height) / canvasHeight);
 
-  const ndcRect = [0, 0, 100, 100];
-  console.log("NDC Rectangle:", ndcRect);
-  return ndcRect;
+  return [left, bottom, right, top];
 }
 
 function createMesh() {
@@ -104,6 +109,7 @@ function createMesh() {
   const shader = PIXI.Shader.from(vertexShader, fragmentShader, {
     resolution: [0, 0],
     u_rect_size: [0, 0, 0, 0],
+    u_mouse: [0, 0],
     u_time: 0,
   });
   return new PIXI.Mesh(geometry, shader);
