@@ -5,6 +5,7 @@
 
 body {
   overflow: hidden;
+  background: #222222;
 }
 
 #app {
@@ -22,4 +23,5 @@ body {
   padding: 0.5rem;
   background: none;
   border: none;
+  color: white;
 }
